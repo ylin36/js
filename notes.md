@@ -415,3 +415,96 @@ const showWinner = (...args) => {
 showWinner("Usain Bolt", "Justin Gatlin", "Asafa Powell" )
 // "Usain Bolt was the winner"
 ```
+
+### Default arguments
+```
+function calculatePrice(total, tax = 0.1, tip = 0.05){
+  console.log(total + (total * tax) + (total * tip));
+}
+// In this case 0.15 will be bound to the tip
+calculatePrice(100, undefined, 0.15)
+```
+
+a nicer way is to just pass in default object. With destructuring we can write this:
+
+By writing = {} we default our argument to an Object and no matter what argument we pass in the function, it will be an Object:
+```
+function calculatePrice({
+  total = 0,
+  tax = 0.1,
+  tip = 0.05} = {} ){
+  console.log(total + (total * tax) + (total * tip));
+}
+
+const bill = calculatePrice({ tip: 0.15, total:150 });
+// 187.5
+```
+destructure errors
+```
+function calculatePrice({
+  total = 0,
+  tax = 0.1,
+  tip = 0.05}){
+  return total + (total * tax) + (total * tip);
+}
+calculatePrice({});
+// cannot destructure property `total` of 'undefined' or 'null'.
+calculatePrice();
+// cannot destructure property `total` of 'undefined' or 'null'.
+calculatePrice(undefined)
+// cannot destructure property `total` of 'undefined' or 'null'.
+```
+
+## 12. string methods
+```
+const str = "this is a short sentence";
+console.log(str.indexOf("short"));
+// Output: 10
+
+const str = "pizza, orange, cereals"
+console.log(str.slice(0, 5));
+// Output: "pizza"
+
+const str = "i ate an apple"
+console.log(str.toUpperCase());
+// Output: "I ATE AN APPLE"
+
+const str = "I ATE AN APPLE"
+console.log(str.toLowerCase());
+// Output: "i ate an apple"
+
+const code = "ABCDEFG";
+console.log(code.startsWith("ABC"));
+// true
+
+const code = "ABCDEFGHI"
+console.log(code.startsWith("DEF",3));
+// true, it will begin checking after 3 characters
+
+const code = "ABCDEF";
+console.log(code.endsWith("DEF"));
+// true
+
+const code = "ABCDEFGHI"
+console.log(code.endsWith("EF", 6));
+// true, 6 means that we consider only the first 6 values ABCDEF, and yes this string ends with EF therefore we get *true*
+
+const code = "ABCDEF"
+console.log(code.includes("CDE"));
+// true
+
+let hello = "Hi";
+console.log(hello.repeat(10));
+// "HiHiHiHiHiHiHiHiHiHi"
+```
+
+## 13. regex
+```
+var pattern = /[A-Z]{3}-\d{3}/gi;
+
+or
+
+// RegExp constructor
+// arguments: pattern; flags
+var pattern = new RegExp("[A-Z]{3}-\\d{3}", "gi");
+```
