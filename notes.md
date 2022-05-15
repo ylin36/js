@@ -1,5 +1,60 @@
 # Quick notes for js quirks
 
+- [Quick notes for js quirks](#quick-notes-for-js-quirks)
+  - [0. Primitives](#0-primitives)
+  - [1. Object access by key](#1-object-access-by-key)
+  - [2. Clone](#2-clone)
+  - [3. Array](#3-array)
+    - [3.1 Arrays can store js data type](#31-arrays-can-store-js-data-type)
+    - [3.2 Array methods](#32-array-methods)
+  - [4. typeof](#4-typeof)
+  - [5. logical operators](#5-logical-operators)
+  - [6. === !== vs == !=](#6---vs--)
+  - [7. undefined vs null](#7-undefined-vs-null)
+  - [8. functions](#8-functions)
+  - [9. Objects](#9-objects)
+    - [9.1 declaration](#91-declaration)
+    - [9.2 Object types](#92-object-types)
+    - [9.3 Prototypes](#93-prototypes)
+    - [9.4 Object instance methods](#94-object-instance-methods)
+  - [10. let vs var vs const](#10-let-vs-var-vs-const)
+    - [10.0](#100)
+    - [10.1 temporal dead space](#101-temporal-dead-space)
+    - [10.2 best practice opinions](#102-best-practice-opinions)
+  - [11. Arrow function](#11-arrow-function)
+    - [Default arguments](#default-arguments)
+  - [12. string methods](#12-string-methods)
+  - [13. regex](#13-regex)
+  - [14. Object notation](#14-object-notation)
+    - [14.1 serialize](#141-serialize)
+    - [14.2 parse (deserialize)](#142-parse-deserialize)
+  - [15. function can return functions](#15-function-can-return-functions)
+  - [16. Closures](#16-closures)
+    - [16.1 this](#161-this)
+    - [16.2 anonymous function issue (this scoping)](#162-anonymous-function-issue-this-scoping)
+    - [16.3 unexpected behavior with closure in anonymous functions](#163-unexpected-behavior-with-closure-in-anonymous-functions)
+    - [remove object property (Delete construct)](#remove-object-property-delete-construct)
+  - [17. Modularity](#17-modularity)
+  - [18. Spread operator](#18-spread-operator)
+    - [18.1 spread combine arrays](#181-spread-combine-arrays)
+    - [18.2 function param spread](#182-function-param-spread)
+    - [18.3 object spread](#183-object-spread)
+    - [18.4 Rest parameter spread](#184-rest-parameter-spread)
+  - [19. Classes](#19-classes)
+    - [19.1 set/get](#191-setget)
+    - [19.2 extending class](#192-extending-class)
+    - [19.3 extending arrays](#193-extending-arrays)
+  - [20. Promises](#20-promises)
+    - [20.1 chaining promise](#201-chaining-promise)
+    - [20.2 Promise.resolve / Promise.reject](#202-promiseresolve--promisereject)
+    - [20.3 Promise.all / Promise.race](#203-promiseall--promiserace)
+    - [20.4 Promise.race](#204-promiserace)
+    - [20.5 async await](#205-async-await)
+  - [21. Generators](#21-generators)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
+
 ## 0. Primitives
 ```
 string
@@ -286,6 +341,27 @@ constant = " I can't be reassigned";
 // Uncaught TypeError: Assignment to constant variable
 ```
 
+### 10.0
+loop through properties
+```
+const person = {fname:"John", lname:"Doe", age:25};
+
+let text = "";
+for (let x in person) {
+  text += person[x];
+}
+```
+
+loop through array
+```
+Do not use for in over an Array if the index order is important.
+The index order is implementation-dependent, and array values may not be accessed in the order you expect.
+It is better to use a for loop, a for of loop, or Array.forEach() when the order is important.
+
+for (variable in array) {
+  code
+}
+```
 ### 10.1 temporal dead space
 var can be accessed before they're assigned. the value just won't exist
 ```
@@ -508,3 +584,721 @@ or
 // arguments: pattern; flags
 var pattern = new RegExp("[A-Z]{3}-\\d{3}", "gi");
 ```
+
+## 14. Object notation
+js understand json natively
+```
+    var order = {
+      "date": "11/20/2013",
+      "customerId": 116,
+      "items": [
+        {
+          "product": "Surface 4 Pro",
+          "unitprice": "799",
+          "amount": 1
+        },
+        {
+          "product": "Type Cover 4",
+          "unitprice": "129",
+          "amount": 1
+        },
+        {
+          "product": "Docking station",
+          "unitprice": "199",
+          "amount": 1
+        }
+      ]
+    }
+```
+
+### 14.1 serialize
+```
+var orderJson = JSON.stringify(order, null, "  ");
+console.log(orderJson);
+```
+
+### 14.2 parse (deserialize)
+```
+var order = JSON.parse(orderString);
+```
+
+## 15. function can return functions
+```
+var kind = "subtract";
+var op = createOperation(kind);
+console.log(op(35, 23)); // 12
+
+function createOperation(kind) {
+  if (kind == "add") {
+    return function (a, b) {
+      return a + b;
+    };
+  }
+  else {
+    return function (a, b) {
+      return a - b;
+    };
+  }
+}
+```
+
+## 16. Closures
+A function that is defined inside another function adds the containing function’s activation object into its scope chain. This ensures that the internal function has access to the variables of the containing function. So, in createOp, the returned function’s scope chain includes the activation object for createOp. When the console.log() operation invokes the anonymous function through addOp, the execution context of addOp looks like as shown in the image below.
+```
+var addOp = createOp("add");
+    var subtractOp = createOp("subtract");
+
+    console.log(addOp(23, 12));      // 35
+    console.log(subtractOp(23, 12)); // 11
+
+    function createOp(kind) {
+      return function (a, b) {
+        if (kind == "add") {
+          return a + b;
+        }
+        else if (kind == "subtract") {
+          return a - b;
+        }
+      }
+    }
+```
+
+### 16.1 this 
+The this object is bound at run time based on the context in which a function is executed. When called in an object method, this equals the object you invoke the method on. In the constructor function, this represents the execution context of the object just being created. When used inside global functions, this is equal to the window object, which you’ll learn about soon.
+
+### 16.2 anonymous function issue (this scoping)
+They are not bound to an object when you invoke them…
+
+```
+var type = "Mercedes";
+
+var myCar = {
+  type: "BMW",
+
+  getType: function () {
+    return this.type;
+  },
+
+  getTypeFuncion: function () {
+    return function () {
+      return this.type;   // this anoynmous function will return global type
+    }
+  }
+};
+
+console.log(myCar.getType());
+console.log(myCar.getTypeFuncion()());
+
+BMW
+Mercedes
+```
+
+### 16.3 unexpected behavior with closure in anonymous functions
+The anonymous function is evaluated when it is invoked and using the execution context it resolves the value of i, using the context’s scope chain. When you call giveMeFunctions(), the i variable is set to 3 at the time it returns.
+
+As you iterate through the elements in the returned function array, the i*i expression is evaluated using the value of i, which happens to be 3 each time. That is why you see only nines in the output. There is a quick fix for this issue.
+
+```
+  function giveMeFunctions() {
+    var functions = [];
+    for (var i = 0; i < 3; i++) {
+      functions[i] = function () {
+        return i * i;
+      }
+    }
+    return functions;
+  }
+
+  var myFunctions = giveMeFunctions();
+  for (var i = 0; i < myFunctions.length; i++) {
+    console.log(i + ": " + myFunctions[i]());
+  }
+
+0: 9
+1: 9
+2: 9
+```
+
+```
+function giveMeFunctions() {
+  var functions = [];
+  for (var i = 0; i < 3; i++) {
+    functions[i] = function (arg) {
+      return function () {
+        return arg * arg;
+      }
+    }(i);
+  }
+  return functions;
+}
+
+0: 0
+1: 1
+2: 4
+```
+
+### remove object property (Delete construct)
+```
+var myObject = new Object();
+myObject.intProp = 23;
+myObject.strProp = "Hi!";
+
+console.log(myObject.intProp); // 23
+console.log(myObject.strProp); // Hi!
+
+delete myObject.intProp;
+
+console.log(myObject.intProp); // undefined
+console.log(myObject.strProp); // Hi!
+```
+
+## 17. Modularity
+js does not have a concept of modules, but most developers use the module pattern that mimics the behavior of modules in other programming languages.
+```
+var CircleOps = (function () {
+  // --- Private stuff
+  return {
+    // --- Public stuff
+  };
+})();
+```
+
+## 18. Spread operator 
+### 18.1 spread combine arrays
+```
+const veggie = ["tomato","cucumber","beans"];
+const meat = ["pork","beef","chicken"];
+
+const menu = [...veggie, "pasta", ...meat];
+console.log(menu);
+// Array [ "tomato", "cucumber", "beans", "pasta", "pork", "beef", "chicken" ]
+```
+copy
+```
+const veggie = ["tomato","cucumber","beans"];
+// we created an empty array and put the values of the old array inside of it
+const newVeggie = [].concat(veggie);
+veggie.push("peas");
+console.log(veggie);
+// Array [ "tomato", "cucumber", "beans", "peas" ]
+console.log(newVeggie);
+// Array [ "tomato", "cucumber", "beans" ]
+```
+spread syntax copy
+```
+const veggie = ["tomato","cucumber","beans"];
+const newVeggie = [...veggie];
+veggie.push("peas");
+console.log(veggie);
+// Array [ "tomato", "cucumber", "beans", "peas" ]
+console.log(newVeggie);
+// Array [ "tomato", "cucumber", "beans" ]
+```
+
+### 18.2 function param spread
+```
+// OLD WAY
+function doStuff (x, y, z) {
+  console.log(x + y + z);
+ }
+var args = [0, 1, 2];
+
+// Call the function, passing args
+doStuff.apply(null, args);
+
+// USE THE SPREAD SYNTAX
+
+doStuff(...args);
+// 3 (0+1+2);
+console.log(args);
+// Array [ 0, 1, 2 ]
+```
+if we pass in more, extras are ignored
+```
+const name = ["Jon", "Paul", "Jones"];
+
+function greet(first, last) {
+  console.log(`Hello ${first} ${last}`);
+}
+greet(...name);
+// Hello Jon Paul
+```
+
+### 18.3 object spread
+```
+let person = {
+  name : "Alberto",
+  surname: "Montalesi",
+  age: 25,
+}
+
+let clone = {...person};
+console.log(clone);
+// Object { name: "Alberto", surname: "Montalesi", age: 25 }
+```
+
+### 18.4 Rest parameter spread
+this one will **condense**
+```
+const runners = ["Tom", "Paul", "Mark", "Luke"];
+const [first,second,...losers] = runners;
+
+console.log(...losers);
+// Mark Luke
+```
+
+## 19. Classes
+synatical sugar over js' prototype-based inheritance
+
+prototype
+```
+function Person(name,age) {
+  this.name = name;
+  this.age = age;
+}
+
+Person.prototype.greet = function(){
+  console.log("Hello, my name is " + this.name);
+}
+
+const alberto = new Person("Alberto", 26);
+const caroline = new Person("Caroline",26);
+
+alberto.greet();
+// Hello, my name is Alberto
+caroline.greet();
+// Hello, my name is Caroline
+```
+class way
+```
+class Person {
+  constructor(name,age){
+    this.name = name;
+    this.age = age;
+  }
+  greet(){
+    console.log(`Hello, my name is ${this.name} and I am ${this.age} years old` );
+  } // no commas in between methods
+  farewell(){
+    console.log("goodbye friend");
+  }
+}
+
+const alberto = new Person("Alberto",26);
+
+alberto.greet();
+// Hello, my name is Alberto and I am 26 years old
+alberto.farewell();
+// goodbye friend
+```
+
+static methods
+
+incorrect way
+```
+class Person {
+  constructor(name,age){
+    this.name = name;
+    this.age = age;
+  }
+  static info(){
+    console.log("I am a Person class, nice to meet you");
+  }
+}
+
+const alberto = new Person("Alberto",26);
+
+alberto.info();
+// TypeError: alberto.info is not a function
+```
+correct way
+```
+class Person {
+  constructor(name,age){
+    this.name = name;
+    this.age = age;
+  }
+  static info(){
+    console.log("I am a Person class, nice to meet you");
+  }
+}
+const alberto = new Person("Alberto",26);
+Person.info();
+// I am a Person class, nice to meet you
+```
+
+### 19.1 set/get
+```
+class Person {
+  constructor(name,surname) {
+    this.name = name;
+    this.surname = surname;
+    this.nickname = "";
+  }
+  set nicknames(value){
+    this.nickname = value;
+    console.log(this.nickname);
+  }
+  get nicknames(){
+     console.log(`Your nickname is ${this.nickname}`);
+  }
+}
+
+const alberto = new Person("Alberto","Montalesi");
+
+// first we call the setter
+alberto.nicknames = "Albi";
+// "Albi"
+
+// then we call the getter
+alberto.nicknames;
+// "Your nickname is Albi"
+```
+### 19.2 extending class
+```
+// our initial class
+class Person {
+  constructor(name,age){
+    this.name = name;
+    this.age = age;
+  }
+  greet(){
+    console.log(`Hello, my name is ${this.name} and I am ${this.age} years old` );
+  }
+}
+
+
+// our new class
+class Adult extends Person {
+  constructor(name,age,work){
+    super(name,age);     // must call super or will error
+    this.work = work;
+  }
+}
+const alberto = new Adult("Alberto",26,"software developer");
+```
+
+### 19.3 extending arrays
+classes can extend array
+```
+class Classroom extends Array {
+  // we use rest operator to grab all the students
+  constructor(name, ...students){
+    // we use spread to place all the students in the array individually otherwise we would push an array into an array
+    super(...students);
+    this.name = name;
+    // we create a new method to add students
+  }
+  add(student){
+    this.push(student);
+  }
+}
+const myClass = new Classroom('1A',
+  {name: "Tim", mark: 6},
+  {name: "Tom", mark: 3},
+  {name: "Jim", mark: 8},
+  {name: "Jon", mark: 10},
+);
+
+// now we can call
+myClass.add({name: "Timmy", mark:7});
+myClass[4];
+// Object { name: "Timmy", mark: 7 }
+
+// we can also loop over with for of
+for(const student of myClass) {
+  console.log(student);
+  }
+// Object { name: "Tim", mark: 6 }
+// Object { name: "Tom", mark: 3 }
+// Object { name: "Jim", mark: 8 }
+// Object { name: "Jon", mark: 10 }
+// Object { name: "Timmy", mark: 7 }
+```
+
+## 20. Promises
+**avoid call back hell**
+```
+const makePizza = (ingredients, callback) => {
+    mixIngredients(ingredients, function(mixedIngredients)){
+      bakePizza(mixedIngredients, function(bakedPizza)){
+        console.log('finished!')
+      }
+    }
+}
+```
+
+use **promises** instead
+
+We use .then() to grab the value when the promise resolves and .catch() when the promise rejects.
+
+```
+const myPromise = new Promise((resolve, reject) => {
+  setTimeout(() => {
+      resolve("The value we get from the promise");
+    }, 2000);
+});
+
+myPromise.then(
+  data => {
+    console.log(data);
+  });
+// after 2 seconds ...
+// The value we get from the promise
+console.log("hello");
+
+hello
+The value we get from the promise
+```
+```
+const myPromise = new Promise((resolve, reject) => {
+  setTimeout(() => {
+      reject(Error("this is our error"));
+    }, 2000);
+});
+
+myPromise
+  .then(data => {
+    console.log(data);
+  })
+  .catch(err => {
+    console.error(err);
+  })
+  // Error: this is our error
+  // Stack trace:
+  // myPromise</<@debugger eval code:3:14
+```
+
+### 20.1 chaining promise
+We can chain promises one after the other, using what was returned from the previous one as the base for the subsequent one, whether the promise was resolved or rejected.
+
+You can chain as many promises as you want and the code will still be more readable / shorter than callbacks
+```
+const myPromise = new Promise((resolve, reject) => {
+  resolve();
+});
+
+myPromise
+  .then(data => {
+    // return something new 
+    return 'working...'
+  })
+  .then(data => {
+    // log the data that we got from the previous promise
+    console.log(data);
+
+    throw 'failed!';
+  })
+  .catch(err => {
+    // grab the error from the previous promise and log it
+    console.error(err);
+    // failed!
+  })
+```
+
+### 20.2 Promise.resolve / Promise.reject
+Promise.resolve() and Promise.reject() will create promises that automatically resolve or reject.
+
+```
+//Promise.resolve()
+Promise.resolve('Success').then(function(value) {
+  console.log(value);
+  // "Success"
+}, function(value) {
+  // not called
+});
+
+// Promise.reject()
+Promise.reject(new Error('fail')).then(function() {
+  // not called
+}, function(error) {
+  console.log(error);
+  // Error: fail
+});
+```
+
+### 20.3 Promise.all / Promise.race
+Promise.all() returns a single Promise that resolves when all promises have resolved.
+```
+const promise1 =  new Promise((resolve,reject) => {
+  setTimeout(resolve, 500, 'first value');
+});
+const promise2 =  new Promise((resolve,reject) => {
+  setTimeout(resolve, 1000, 'second value');
+});
+
+Promise
+  .all([promise1, promise2])
+  .then(data => {
+    const[promise1data, promise2data] = data;
+    console.log(promise1data, promise2data);
+  });
+// after 1000 ms
+// first value second value
+```
+
+If one of the promises was rejected, then all of them would asynchronously reject with the value of that rejection even if they resolved.
+
+```
+const promise1 =  new Promise((resolve,reject) => {
+  resolve("my first value");
+});
+const promise2 =  new Promise((resolve,reject) => {
+  reject(Error("oooops error"));
+});
+
+// one of the two promises will fail, but `.all` will return only a rejection.
+Promise
+  .all([promise1, promise2])
+  .then(data => {
+    const[promise1data, promise2data] = data;
+    console.log(promise1data, promise2data);
+  })
+  .catch(err => {
+    console.log(err);
+  });
+  // Error: oooops error
+```
+
+### 20.4 Promise.race
+returns a promise that resolves or rejects as soon as one of the promises in the iterable resolves or rejects with the value from that promise.
+```
+const promise1 =  new Promise((resolve,reject) => {
+  setTimeout(resolve, 500, 'first value');
+});
+const promise2 =  new Promise((resolve,reject) => {
+  setTimeout(resolve, 100, 'second value');
+});
+
+Promise.race([promise1, promise2]).then(function(value) {
+  console.log(value);
+  // Both resolve, but promise2 is faster
+});
+// expected output: "second value"
+```
+### 20.5 async await
+
+```
+async function example() {
+  const myPromise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+        resolve("The value we get from the promise");
+      }, 2000);
+  });
+
+  await myPromise();
+}
+```
+## 21. Generators
+a) we declared the function using function*
+
+b) we used the keyword yield before our content
+
+c) we start our function using .next()
+
+d) the last time we call .next() we receive and empty object and we get done: true
+
+e) Our function is paused between each .next() call.
+```
+function* fruitList(){
+  yield 'Banana';
+  yield 'Apple';
+  yield 'Orange';
+}
+
+const fruits = fruitList();
+
+fruits;
+// Generator
+console.log(fruits.next());
+// Object { value: "Banana", done: false }
+console.log(fruits.next());
+// Object { value: "Apple", done: false }
+console.log(fruits.next());
+// Object { value: "Orange", done: false }
+console.log(fruits.next());
+// Object { value: undefined, done: true }
+```
+looping over generator
+```
+// create an array of fruits
+const fruitList = ['Banana','Apple','Orange','Melon','Cherry','Mango'];
+
+// create our looping generator
+function* loop(arr) {
+  for (const item of arr) {
+    yield `I like to eat ${item}s`;
+  }
+}
+
+const fruitGenerator = loop(fruitList);
+console.log(fruitGenerator.next());
+// Object { value: "I like to eat Bananas", done: false }
+console.log(fruitGenerator.next());
+// Object { value: "I like to eat Apples", done: false }
+console.log(fruitGenerator.next().value);
+// "I like to eat Oranges"
+```
+Using .return() we can return a given value and finish the generator.
+
+```
+function* fruitList(){
+  yield 'Banana';
+  yield 'Apple';
+  yield 'Orange';
+}
+
+const fruits = fruitList();
+
+console.log(fruits.return());
+// Object { value: undefined, done: true }
+```
+
+catch error with throw
+```
+function* gen(){
+  try {
+    yield "Trying...";
+    yield "Trying harder...";
+    yield "Trying even harder..";
+  }
+  catch(err) {
+    console.log("Error: " + err );
+  }
+}
+
+const myGenerator = gen();
+console.log(myGenerator.next());
+// Object { value: "Trying...", done: false }
+console.log(myGenerator.next());
+// Object { value: "Trying harder...", done: false }
+console.log(myGenerator.throw("ooops"));
+// Error: ooops
+// Object { value: undefined, done: true }
+```
+combine with Promise
+```
+const myPromise = () => new Promise((resolve) => {
+  resolve("our value is...");
+});
+
+function* gen() {
+  let result = "";
+  // returns promise
+  yield myPromise().then(data => { result = data }) ;
+  // wait for the promise and use its value
+  yield result + ' 2';
+};
+
+// Call the async function and pass params
+const asyncFunc = gen(); 
+const val1 = asyncFunc.next();
+console.log(val1);
+// call the promise and wait for it to resolve
+// {value: Promise, done: false}
+val1.value.then(() => {
+  console.log(asyncFunc.next());
+})
+// Object { value: "our value is... 2", done: false }
+```
+
