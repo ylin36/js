@@ -51,6 +51,12 @@
     - [20.4 Promise.race](#204-promiserace)
     - [20.5 async await](#205-async-await)
   - [21. Generators](#21-generators)
+  - [22. Array operators](#22-array-operators)
+    - [22.1 Map](#221-map)
+    - [22.2 Filter](#222-filter)
+    - [22.3 Reduce](#223-reduce)
+  - [23. Higher order functions](#23-higher-order-functions)
+  - [24. Pure function](#24-pure-function)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
@@ -1301,4 +1307,46 @@ val1.value.then(() => {
 })
 // Object { value: "our value is... 2", done: false }
 ```
+
+## 22. Array operators
+### 22.1 Map
+```
+const numbers = [1, 5, 10, 15];
+// The associated function multiply each array number by 2
+const doubles = numbers.map(x => x * 2);
+
+console.log(numbers); // [1, 5, 10, 15] (no change)
+console.log(doubles); // [2, 10, 20, 30]
+```
+### 22.2 Filter
+```
+const numbers = [1, 5, 10, 15];
+// Keep only the number greater than or equal to 10
+const bigOnes = numbers.filter(x => x >= 10);
+```
+### 22.3 Reduce
+```
+const numbers = [1, 5, 10, 15];
+// Compute the sum of array elements
+const sum = numbers.reduce((acc, value) => acc + value, 0);
+```
+
+## 23. Higher order functions
+functions are first class in js (treated same as other types)
+
+A function that takes another function as a parameter or returns another function is called a higher-order function.
+```
+const titles = movies => movies.map(movie => movie.title);
+const byNolan = movie => movie.director === "Christopher Nolan";
+const filter = (movies, func) => movies.filter(func);
+const goodRating = movie => movie.imdbRating >= 7.5;
+const ratings = movies => movies.map(movie => movie.imdbRating);
+const average = array => array.reduce((sum, value) => sum + value, 0) / array.length;
+```
+
+## 24. Pure function
+A pure function is a function that has the following characteristics:
+
+* Its outputs depend solely on its inputs
+* It has no side effect
 
